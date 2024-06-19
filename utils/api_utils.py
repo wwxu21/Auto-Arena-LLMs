@@ -41,7 +41,7 @@ supported_models = [
     # openchat
     'openchat/openchat-3.5-1210',
     # Zhipu AI GLM
-    'glm-4',
+    'glm-4', 'THUDM/glm-4-9b-chat'
     # Baidu Wenxin
     'wenxin-4',
     # MiniMax
@@ -68,7 +68,7 @@ supported_models = [
     # aisingapore
     "aisingapore/sea-lion-7b-instruct",
     ]
-open_source_models = ['meta-llama/Meta-Llama-3-8B-Instruct','Qwen/Qwen2-7B-Instruct', 'Qwen/Qwen1.5-14B-Chat', 'Qwen/Qwen1.5-7B-Chat', 'baichuan-inc/Baichuan2-7B-Chat', 'baichuan-inc/Baichuan2-13B-Chat', 'microsoft/Phi-3-small-128k-instruct', 'microsoft/Phi-3-medium-128k-instruct', 'sail/Sailor-14B-Chat', 'sail/Sailor-7B-Chat','SeaLLMs/SeaLLM-7B-v2.5', "CohereForAI/aya-23-8B", "google/gemma-1.1-7b-it", "mistralai/Mistral-7B-Instruct-v0.3", "aisingapore/sea-lion-7b-instruct",]
+open_source_models = ['meta-llama/Meta-Llama-3-8B-Instruct','Qwen/Qwen2-7B-Instruct', 'Qwen/Qwen1.5-14B-Chat', 'Qwen/Qwen1.5-7B-Chat', 'baichuan-inc/Baichuan2-7B-Chat', 'baichuan-inc/Baichuan2-13B-Chat', 'microsoft/Phi-3-small-128k-instruct', 'microsoft/Phi-3-medium-128k-instruct', 'sail/Sailor-14B-Chat', 'sail/Sailor-7B-Chat','SeaLLMs/SeaLLM-7B-v2.5', "CohereForAI/aya-23-8B", "google/gemma-1.1-7b-it", "mistralai/Mistral-7B-Instruct-v0.3", "aisingapore/sea-lion-7b-instruct",'THUDM/glm-4-9b-chat']
 # API setting constants
 API_MAX_RETRY = 5
 API_RETRY_SLEEP = 30
@@ -175,6 +175,9 @@ def chat_completion_vllm(model, conv, temperature, max_tokens=2048, n=1):
         if n = 1: str
     """
     output = API_ERROR_OUTPUT
+    port_map = {'Qwen/Qwen2-7B-Instruct':8000, 'meta-llama/Meta-Llama-3-8B-Instruct':8001, 'Qwen/Qwen1.5-14B-Chat':8002, 'Qwen/Qwen1.5-7B-Chat':8003,  'THUDM/glm-4-9b-chat':8005, 'SeaLLMs/SeaLLM-7B-v2.5':8006, 'sail/Sailor-14B-Chat':8007, 'sail/Sailor-7B-Chat':8004}
+    vllm_endpoint = vllm_endpoint.replace("8000", port_map[model])
+
     client = OpenAI(base_url=vllm_endpoint, api_key=vllm_key,)
 
     for retry_i in range(API_MAX_RETRY):
