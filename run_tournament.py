@@ -51,14 +51,14 @@ if __name__ == "__main__":
     # read arguments
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--num_each_domain_to_load", type=int, default=5, help="number of questions to debate for each domain")
+    parser.add_argument("--num_each_domain_to_load", type=int, default=1, help="number of questions to debate for each domain")
     parser.add_argument("--judge_debate_rounds", type=int, default=1, help="How many rounds of debates to run")
     parser.add_argument("--question_save_file", type=str, default='data/generated_questions_difficult.jsonl', help="where to save generated questions")
     parser.add_argument("--tournament_dir", type=str, required=True, help="where to save the tournament files")
     parser.add_argument("--shuffle_ab", type=bool, default=True, help="whether to shuffle the order of model_a and model_b")
     parser.add_argument("--evaluate_first_turn", action="store_true", help="whether to evaluate the first turn of the debate")
-    parser.add_argument("--language", type=str, default='en', help="language used for evaluation")
-    
+    parser.add_argument("--language", type=str, default='th', help="language used for evaluation")
+    parser.add_argument("--committee", type=str, default=None, nargs="+", help="direct assign committee membters")
     args = parser.parse_args()
     if args.language != 'en' and args.language not in args.tournament_dir:
         raise Exception(f"Mismatch between language and tournament directory. Please use a directory with {args.language} in the name.")
@@ -74,6 +74,11 @@ if __name__ == "__main__":
                         'Qwen/Qwen1.5-72B-Chat', 'zero-one-ai/Yi-34B-Chat', 
                         'deepseek-ai/deepseek-llm-67b-chat', 'glm-4', 
                         'wenxin-4', 'minimax-abab6.5-chat', 'SenseChat-5']
+    elif args.language in ['th', "id", "vi"]:
+        # also include chinese models
+        args.question_save_file = 'data/generated_questions_grade6.jsonl' # do not generate very hard questions for multilingual llm
+        player_names = ['meta-llama/Meta-Llama-3-8B-Instruct','Qwen/Qwen2-7B-Instruct', 'Qwen/Qwen1.5-14B-Chat', 'Qwen/Qwen1.5-7B-Chat', 'sail/Sailor-14B-Chat', 'sail/Sailor-7B-Chat','SeaLLMs/SeaLLM-7B-v2.5',"THUDM/glm-4-9b-chat"]
+        next_round = ["CohereForAI/aya-23-8B", "google/gemma-1.1-7b-it", "aisingapore/sea-lion-7b-instruct",]
         
     # organized according to MMLU ranking
     mmlu_ratings = pd.read_csv('data/MMLU.csv')
@@ -143,9 +148,16 @@ if __name__ == "__main__":
                 print('Bye for', model_a)
             else:
                 print('scores: ', scores)
-                # committee in descending order of scores
-                committee = sorted(scores, key=scores.get, reverse=True)
-                committee = [c for c in committee if c != model_a and c != model_b][:5]
+                
+                if args.committee:
+                    committee = args.committee
+                else:
+                    # committee in descending order of scores
+                    committee = sorted(scores, key=scores.get, reverse=True)
+                    committee = [c for c in committee if c != model_a and c != model_b][:5]
+                
+
+
                 print('Committee:', committee)
                     
                 save_model_a_name = model_a.replace('/', '_')
